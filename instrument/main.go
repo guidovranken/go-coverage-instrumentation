@@ -97,13 +97,10 @@ func (f *File) newCounter(start, end token.Pos, numStmt int) ast.Stmt {
 		Value: strconv.Itoa(cnt),
 	}
 	counter := &ast.IndexExpr{
-        /*
 		X: &ast.SelectorExpr{
-			X:   ast.NewIdent(fuzzdepPkg),
+			X:   ast.NewIdent("fuzz_helper"),
 			Sel: ast.NewIdent("CoverTab"),
 		},
-        */
-        X: ast.NewIdent("CoverTab"),
 		Index: idx,
 	}
 	return &ast.IncDecStmt{
@@ -404,6 +401,49 @@ func (f *File) Visit(node ast.Node) ast.Visitor {
 	return f
 }
 
+func (f *File) addImport(path, name, anyIdent string) {
+	newImport := &ast.ImportSpec{
+		Name: ast.NewIdent(name),
+		Path: &ast.BasicLit{
+			Kind:  token.STRING,
+			Value: fmt.Sprintf("%q", path),
+		},
+	}
+	impDecl := &ast.GenDecl{
+		Tok: token.IMPORT,
+		Specs: []ast.Spec{
+			newImport,
+		},
+	}
+	// Make the new import the first Decl in the file.
+	astFile := f.astFile
+	astFile.Decls = append(astFile.Decls, nil)
+	copy(astFile.Decls[1:], astFile.Decls[0:])
+	astFile.Decls[0] = impDecl
+	astFile.Imports = append(astFile.Imports, newImport)
+
+	// Now refer to the package, just in case it ends up unused.
+	// That is, append to the end of the file the declaration
+	//	var _ = _cover_atomic_.AddUint32
+	reference := &ast.GenDecl{
+		Tok: token.VAR,
+		Specs: []ast.Spec{
+			&ast.ValueSpec{
+				Names: []*ast.Ident{
+					ast.NewIdent("_"),
+				},
+				Values: []ast.Expr{
+					&ast.SelectorExpr{
+						X:   ast.NewIdent(name),
+						Sel: ast.NewIdent(anyIdent),
+					},
+				},
+			},
+		},
+	}
+	astFile.Decls = append(astFile.Decls, reference)
+}
+
 func main() {
     fset := token.NewFileSet()
     filename:= os.Args[1]
@@ -418,6 +458,8 @@ func main() {
 		fset:      fset,
 		astFile:   astFile,
 	}
+
+    file.addImport("github.com/guidovranken/go-coverage-instrumentation/helper", "fuzz_helper", "CoverTab")
 
 	ast.Walk(file, file.astFile)
 
