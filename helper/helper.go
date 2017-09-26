@@ -6,18 +6,18 @@ const (
 
 var covered = make([]int, CoverSize)
 
-var new_coverage int;
+var total_coverage int;
 func ResetCoverage() {
-    new_coverage = 0
+    //total_coverage = 0
 }
 
 func AddCoverage(idx int) {
     if covered[idx] == 0 {
         covered[idx] = 1
-        new_coverage += 1
+        total_coverage += 1
     }
 }
 
 func CalcCoverage() int {
-    return new_coverage
+    return total_coverage
 }
