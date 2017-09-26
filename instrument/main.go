@@ -96,17 +96,15 @@ func (f *File) newCounter(start, end token.Pos, numStmt int) ast.Stmt {
 		Kind:  token.INT,
 		Value: strconv.Itoa(cnt),
 	}
-	counter := &ast.IndexExpr{
-		X: &ast.SelectorExpr{
-			X:   ast.NewIdent("fuzz_helper"),
-			Sel: ast.NewIdent("CoverTab"),
-		},
-		Index: idx,
-	}
-	return &ast.IncDecStmt{
-		X:   counter,
-		Tok: token.INC,
-	}
+    return &ast.ExprStmt{
+        X : &ast.CallExpr{
+            Fun: &ast.SelectorExpr{
+                X:   ast.NewIdent("fuzz_helper"),
+                Sel: ast.NewIdent("AddCoverage"),
+            },
+            Args: []ast.Expr { idx },
+        },
+    }
 }
 
 func (f *File) addCounters(pos, blockEnd token.Pos, list []ast.Stmt, extendToClosingBrace bool) []ast.Stmt {
@@ -459,7 +457,7 @@ func main() {
 		astFile:   astFile,
 	}
 
-    file.addImport("github.com/guidovranken/go-coverage-instrumentation/helper", "fuzz_helper", "CoverTab")
+    file.addImport("github.com/guidovranken/go-coverage-instrumentation/helper", "fuzz_helper", "AddCoverage")
 
 	ast.Walk(file, file.astFile)
 
