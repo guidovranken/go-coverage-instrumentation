@@ -17,6 +17,7 @@ import (
     "fmt"
     "os"
     "io/ioutil"
+    "path"
     "path/filepath"
 )
 
@@ -493,7 +494,13 @@ func InstrumentFile(filename_in string, filename_out string) {
         panic(err)
     }
 
-    ioutil.WriteFile(filename_out, buf.Bytes(), 0644)
+    d, _ := path.Split(filename_out)
+    os.Mkdir(d, 0700)
+    err = ioutil.WriteFile(filename_out, buf.Bytes(), 0644)
+    if err != nil {
+        fmt.Printf("error: %s\n", err)
+        panic("")
+    }
 }
 
 func main() {
@@ -506,8 +513,7 @@ func main() {
             if !strings.HasPrefix(path, os.Args[1]) {
                 panic("")
             }
-            i := strings.Index(path, "/")
-            fileList_out = append(fileList_out, os.Args[2] + path[i:])
+            fileList_out = append(fileList_out, os.Args[2] + path[len(os.Args[1]):])
         }
         return nil
     })
