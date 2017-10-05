@@ -16,6 +16,8 @@ import (
     "bytes"
     "fmt"
     "os"
+    "io/ioutil"
+    "path/filepath"
 )
 
 var counterGen uint32
@@ -468,12 +470,11 @@ func (f *File) addImport(path, name, anyIdent string) {
 	astFile.Decls = append(astFile.Decls, reference)
 }
 
-func main() {
+func InstrumentFile(filename_in string, filename_out string) {
     fset := token.NewFileSet()
-    filename:= os.Args[1]
-    astFile, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
+    astFile, err := parser.ParseFile(fset, filename_in, nil, parser.ParseComments)
     if err != nil {
-        failf("failed to parse filename %v: %v", filename, err)
+        failf("failed to parse filename %v: %v", filename_in, err)
     }
 
     astFile.Comments = trimComments(astFile, fset)
@@ -492,6 +493,26 @@ func main() {
         panic(err)
     }
 
-    /* TODO output to file */
-    fmt.Printf("%s", buf.Bytes())
+    ioutil.WriteFile(filename_out, buf.Bytes(), 0644)
+}
+
+func main() {
+    fileList_in := []string{}
+    fileList_out := []string{}
+    filepath.Walk(os.Args[1], func(path string, f os.FileInfo, err error) error {
+        if strings.HasSuffix(path, ".go") {
+            fileList_in = append(fileList_in, path)
+
+            if !strings.HasPrefix(path, os.Args[1]) {
+                panic("")
+            }
+            i := strings.Index(path, "/")
+            fileList_out = append(fileList_out, os.Args[2] + path[i:])
+        }
+        return nil
+    })
+	for i := 0 ; i < len(fileList_in); i++ {
+        fmt.Printf("Processing %s, output to %s\n", fileList_in[i], fileList_out[i])
+        InstrumentFile(fileList_in[i], fileList_out[i])
+    }
 }
