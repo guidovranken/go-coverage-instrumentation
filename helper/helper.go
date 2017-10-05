@@ -30,7 +30,7 @@ func IncrementStack() {
     stackDepth += 1
 }
 func DecrementStack() {
-    stackDepth += 1
+    stackDepth -= 1
 }
 func CalcStackDepth() int {
     return stackDepth
