@@ -17,6 +17,7 @@ import (
     "fmt"
     "os"
     "io/ioutil"
+    "path"
     "path/filepath"
 )
 
@@ -467,7 +468,13 @@ func InstrumentFile(filename_in string, filename_out string) {
         panic(err)
     }
 
-    ioutil.WriteFile(filename_out, buf.Bytes(), 0644)
+    d, _ := path.Split(filename_out)
+    os.Mkdir(d, 0700)
+    err = ioutil.WriteFile(filename_out, buf.Bytes(), 0644)
+    if err != nil {
+        fmt.Printf("error: %s\n", err)
+        panic("")
+    }
 }
 
 func main() {
