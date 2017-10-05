@@ -7,6 +7,9 @@ const (
 var covered = make([]int, CoverSize)
 
 var total_coverage int;
+
+var stackDepth int;
+
 func ResetCoverage() {
     //total_coverage = 0
 }
@@ -20,4 +23,15 @@ func AddCoverage(idx int) {
 
 func CalcCoverage() int {
     return total_coverage
+}
+
+
+func IncrementStack() {
+    stackDepth += 1
+}
+func DecrementStack() {
+    stackDepth += 1
+}
+func CalcStackDepth() int {
+    return stackDepth
 }

@@ -272,6 +272,32 @@ func hasFuncLiteral(n ast.Node) (bool, token.Pos) {
 }
 func (f *File) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
+    case *ast.FuncDecl:
+        /* Statement that is inserted at the beginning of the
+        function, that increments the stack depth variable */
+        var incStack = &ast.ExprStmt{
+            X : &ast.CallExpr{
+                Fun: &ast.SelectorExpr{
+                    X: ast.NewIdent("fuzz_helper"),
+                    Sel: ast.NewIdent("IncrementStack"),
+                },
+                Args: []ast.Expr{},
+            },
+        }
+        /* Defer statement that is executed upon leaving the function,
+        that decrements the stack depth variable */
+        var decStack = &ast.DeferStmt{
+            Call : &ast.CallExpr{
+                Fun: &ast.SelectorExpr{
+                    X: ast.NewIdent("fuzz_helper"),
+                    Sel: ast.NewIdent("DecrementStack"),
+                },
+                Args: []ast.Expr{},
+            },
+        }
+
+        /* Prepend both statements */
+        n.Body.List = append([]ast.Stmt{incStack, decStack}, n.Body.List...)
 	case *ast.GenDecl:
 		if n.Tok != token.VAR {
 			return nil // constants and types are not interesting
