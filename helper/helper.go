@@ -9,6 +9,7 @@ var covered = make([]int, CoverSize)
 var total_coverage int;
 
 func ResetCoverage() {
+    stackDepth = 0
     //total_coverage = 0
 }
 
