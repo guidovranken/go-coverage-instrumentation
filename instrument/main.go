@@ -480,8 +480,7 @@ func main() {
             if !strings.HasPrefix(path, os.Args[1]) {
                 panic("")
             }
-            i := strings.Index(path, "/")
-            fileList_out = append(fileList_out, os.Args[2] + path[i:])
+            fileList_out = append(fileList_out, os.Args[2] + path[len(os.Args[1]):])
         }
         return nil
     })
