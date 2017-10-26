@@ -56,9 +56,9 @@ func trimComments(file *ast.File, fset *token.FileSet) []*ast.CommentGroup {
 	for _, group := range file.Comments {
 		var list []*ast.Comment
 		for _, comment := range group.List {
-			if strings.HasPrefix(comment.Text, "//go:") && fset.Position(comment.Slash).Column == 1 {
+			//if strings.HasPrefix(comment.Text, "//go:") && fset.Position(comment.Slash).Column == 1 {
 				list = append(list, comment)
-			}
+			//}
 		}
 		if list != nil {
 			comments = append(comments, &ast.CommentGroup{List: list})
