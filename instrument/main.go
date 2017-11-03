@@ -85,7 +85,6 @@ func genCounter() int {
 }
 
 func (f *File) newCounter(start, end token.Pos, numStmt int) ast.Stmt {
-	cnt := genCounter()
 
     /*
 	if f.blocks != nil {
@@ -95,9 +94,10 @@ func (f *File) newCounter(start, end token.Pos, numStmt int) ast.Stmt {
 	}
     */
 
+    counterGen++
 	idx := &ast.BasicLit{
 		Kind:  token.INT,
-		Value: strconv.Itoa(cnt),
+		Value: strconv.Itoa(int(counterGen)),
 	}
     return &ast.ExprStmt{
         X : &ast.CallExpr{
