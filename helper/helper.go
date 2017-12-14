@@ -2,10 +2,20 @@ package fuzz_helper
 import (
     "runtime"
     "encoding/binary"
+    "encoding/json"
     "fmt"
     "bytes"
     "crypto/sha1"
+    "strings"
+    "io/ioutil"
 )
+
+type symcov struct {
+    CoveredPoints []string `json:"covered-points"`
+    BinaryHash string `json:"binary-hash"`
+    PointSymbolInfo map[string]map[string]map[string]string `json:"point-symbol-info"`
+}
+
 const (
 	CoverSize       = 64 << 10
 )
@@ -21,6 +31,75 @@ var stackDepth int;
 var maxStackDepth int
 
 var mergeMode int;
+
+/* For symcov serialization */
+var g_locations []string
+var g_symcov bool
+
+func getCaller() (string) {
+    pc, file, line, ok := runtime.Caller(2)
+    if ok == false {
+        panic("Unable to retrieve caller information")
+    }
+    funcname := runtime.FuncForPC(pc)
+    if funcname == nil {
+        panic("Unable to resolve caller function name")
+    }
+    return fmt.Sprintf("%v %v %v", funcname.Name(), file, line)
+}
+
+
+func addToLocations(location string) {
+    for _, s := range g_locations {
+        if s == location {
+            return
+        }
+    }
+    g_locations = append(g_locations, location)
+}
+
+func formatSymcov() string {
+    hashes := make([]string, 0)
+    locmap := make(map[string]map[string]map[string]string, 0)
+    i := 0
+    for _, loc := range g_locations {
+        parts := strings.Split(loc, " ")
+        funcname := parts[0]
+        file := parts[1]
+        line := fmt.Sprintf("%v:0", parts[2])
+        hash := fmt.Sprintf("%06d", i)
+        hashes = append(hashes, hash)
+        if _, ok := locmap[file]; !ok {
+            locmap[file] = make(map[string]map[string]string)
+        }
+        if _, ok := locmap[file][funcname]; !ok {
+            locmap[file][funcname] = make(map[string]string)
+        }
+        locmap[file][funcname][hash] = line
+        i++
+    }
+    s := &symcov{
+        hashes,
+        "x",
+        locmap}
+
+    j, err := json.Marshal(s)
+    if err != nil {
+        panic("Error encoding to JSON")
+    }
+
+    return string(j)
+}
+
+func EnableSymcovWriter() {
+    g_symcov = true
+}
+
+func WriteSymcov(filename string) {
+    if g_symcov == true {
+        ioutil.WriteFile(filename, []byte(formatSymcov()), 0644)
+    }
+}
 
 /* instrumentation type 0: code coverage guided
    instrumentation type 1: stack depth guided
@@ -66,6 +145,10 @@ func AddCoverage(idx int) {
             if covered[idx] == 0 {
                 covered[idx] = 1
                 total_coverage += 1
+            }
+
+            if g_symcov == true {
+                addToLocations(getCaller())
             }
     }
 }
