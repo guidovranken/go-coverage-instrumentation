@@ -495,7 +495,7 @@ func InstrumentFile(filename_in string, filename_out string) {
     }
 
     d, _ := path.Split(filename_out)
-    os.Mkdir(d, 0700)
+    os.MkdirAll(d, 0700)
     err = ioutil.WriteFile(filename_out, buf.Bytes(), 0644)
     if err != nil {
         fmt.Printf("error: %s\n", err)
