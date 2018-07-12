@@ -28,6 +28,7 @@ var instrumentation_type int;
 var maxAlloc uint64;
 
 var stackDepth int;
+var intensity uint64;
 var maxStackDepth int
 
 var mergeMode int;
@@ -104,6 +105,7 @@ func WriteSymcov(filename string) {
 /* instrumentation type 0: code coverage guided
    instrumentation type 1: stack depth guided
    instrumentation type 2: memory usage guided
+   instrumentation type 3: code intensity guided
 */
 func SetInstrumentationType(t int) {
     switch t {
@@ -111,6 +113,8 @@ func SetInstrumentationType(t int) {
             instrumentation_type = 1
         case    2:
             instrumentation_type = 2
+        case    3:
+            instrumentation_type = 3
         default:
             instrumentation_type = 0
     }
@@ -129,6 +133,7 @@ func ResetCoverage() {
         total_coverage = 0
     }
     stackDepth = 0
+    intensity = 0
 }
 
 func AddCoverage(idx int) {
@@ -140,6 +145,8 @@ func AddCoverage(idx int) {
             if m.Alloc > maxAlloc {
                 maxAlloc = m.Alloc
             }
+        case    3:
+            intensity++
         default:
             /* Code coverage guided */
             if covered[idx] == 0 {
@@ -160,6 +167,8 @@ func CalcCoverage() uint64 {
         case    2:
             /* This currently allows for up to 2GB of allocations */
             return maxAlloc
+        case    3:
+            return intensity
         default:
             if mergeMode == 1 {
                 /* The purpose of the following lines is to derive a unique
