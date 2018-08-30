@@ -6,7 +6,7 @@
 package main
 
 import (
-	"crypto/sha1"
+    "math/rand"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -20,8 +20,6 @@ import (
     "path"
     "path/filepath"
 )
-
-var counterGen uint32
 
 type CoverBlock struct {
 	ID        int
@@ -76,14 +74,6 @@ type LiteralCollector struct {
 	lits map[Literal]struct{}
 }
 
-func genCounter() int {
-	counterGen++
-	id := counterGen
-	buf := []byte{byte(id), byte(id >> 8), byte(id >> 16), byte(id >> 24)}
-	hash := sha1.Sum(buf)
-	return int(uint16(hash[0]) | uint16(hash[1])<<8)
-}
-
 func (f *File) newCounter(start, end token.Pos, numStmt int) ast.Stmt {
 
     /*
@@ -94,10 +84,9 @@ func (f *File) newCounter(start, end token.Pos, numStmt int) ast.Stmt {
 	}
     */
 
-    counterGen++
 	idx := &ast.BasicLit{
 		Kind:  token.INT,
-		Value: strconv.Itoa(int(counterGen)),
+		Value: strconv.Itoa(rand.Int() % 65536),
 	}
     return &ast.ExprStmt{
         X : &ast.CallExpr{
