@@ -7,6 +7,7 @@ package main
 
 import (
     "math/rand"
+    "time"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -493,6 +494,7 @@ func InstrumentFile(filename_in string, filename_out string) {
 }
 
 func main() {
+    rand.Seed( time.Now().UnixNano())
     fileList_in := []string{}
     fileList_out := []string{}
     filepath.Walk(os.Args[1], func(path string, f os.FileInfo, err error) error {
